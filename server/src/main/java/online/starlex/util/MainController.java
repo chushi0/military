@@ -59,7 +59,7 @@ public class MainController {
         } else {
             byte[] info = new byte[2];
             System.arraycopy(buffer, 1, info, 0, buffer.length - 1);
-            isStepEnd(socketHelper, info);
+            isStepEnd(team, socketHelper, info);
         }
     }
 
@@ -83,9 +83,17 @@ public class MainController {
         return pieces;
     }
 
-    private void isStepEnd(SocketHelper socketHelper, byte[] info) throws IOException {
-        int position1 = info[0];
-        int position2 = info[1];
+    private void isStepEnd(int team, SocketHelper socketHelper, byte[] info) throws IOException {
+        int position1;
+        int position2;
+        if (team == 1) {
+            position1 = info[0];
+            position2 = info[1];
+        } else {
+            position1 = 59 - info[0];
+            position2 = 59 - info[1];
+        }
+
         Piece piece1 = findByPosition(position1);
         Piece piece2 = findByPosition(position2);
         int name1 = piece1.getName() % 100;
@@ -119,6 +127,7 @@ public class MainController {
                 //棋子2是地雷
                 if (name1 == 3) {
                     deleteByPosition(position2);
+                    move(position1, position2);
                     message[1] = 1;
                     isGameEnd();
                 } else if (name1 == 11) {
@@ -137,6 +146,8 @@ public class MainController {
                 }
             } else if (name2 == 0) {
                 //棋子2是军旗
+                deleteByPosition(position2);
+                move(position1, position2);
                 gameMessage[0] = 4;
                 gameMessage[1] = 1;
                 gameMessage[2] = 0;
@@ -156,6 +167,7 @@ public class MainController {
                 isGameEnd();
             } else {
                 if (name1 > name2) {
+                    move(position1, position2);
                     deleteByPosition(position2);
                     message[1] = 1;
                     isGameEnd();
@@ -164,6 +176,7 @@ public class MainController {
                     message[1] = 2;
                     isGameEnd();
                 } else {
+                    assert name1 == name2;
                     deleteByPosition(position1);
                     deleteByPosition(position2);
                     message[1] = 3;
@@ -172,6 +185,7 @@ public class MainController {
             }
         } else {
             //如果位置2没有棋子
+            move(position1, position2);
             message[1] = 0;
         }
         message[2] = (byte) position1;
@@ -285,6 +299,11 @@ public class MainController {
                 piece.setPosition(-1);
             }
         }
+    }
+
+    private void move(int position1, int position2) {
+        Piece piece = findByPosition(position1);
+        piece.setPosition(position2);
     }
 
     private boolean checkPiece(int position1, int position2) {
