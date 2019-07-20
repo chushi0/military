@@ -102,7 +102,7 @@ public class GameFrame {
 				startGame(bytes[2] == 0);
 				break;
 			case 2:
-				militaryChess.moveChess(bytes[2], bytes[3], parseMoveType(bytes[1]));
+				lostJustNow = militaryChess.moveChess(bytes[2], bytes[3], parseMoveType(bytes[1]));
 				if (currentTurn == 0) {
 					currentTurn = 1;
 				} else {

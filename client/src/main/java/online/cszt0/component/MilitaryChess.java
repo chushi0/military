@@ -719,21 +719,34 @@ public class MilitaryChess extends JComponent {
 		selection = -1;
 	}
 
-	public void moveChess(int from, int to, MoveType moveType) {
+	public byte moveChess(int from, int to, MoveType moveType) {
+		byte die = ChessUtil.EMPTY;
 		start = from;
 		end = to;
 		switch (moveType) {
 			case KEEP:
+				if (chess[from] > 1) {
+					die = chess[from];
+				}
 				break;
 			case REPLACE:
+				if (chess[to] > 1) {
+					die = chess[to];
+				}
 				chess[to] = chess[from];
 				break;
 			case CLEAR:
+				if (chess[from] > 1) {
+					die = chess[from];
+				} else if (chess[to] > 1) {
+					die = chess[to];
+				}
 				chess[to] = ChessUtil.EMPTY;
 				break;
 		}
 		chess[from] = ChessUtil.EMPTY;
 		repaint();
+		return die;
 	}
 
 	private boolean movable(int index) {
@@ -753,6 +766,10 @@ public class MilitaryChess extends JComponent {
 		int yOffset = to[1] - from[1];
 		int xOffsetAbs = xOffset > 0 ? xOffset : -xOffset;
 		int yOffsetAbs = yOffset > 0 ? yOffset : -yOffset;
+		// 如果目标行营里有棋子，则不可达
+		if (isCamp(index) && chess[index] != ChessUtil.EMPTY) {
+			return false;
+		}
 		// 不考虑铁路线的判断
 		// 上下左右允许走一格，涉及行营允许斜着走
 		if (xOffsetAbs == 1 && yOffsetAbs == 0 || xOffsetAbs == 0 && yOffsetAbs == 1) {
@@ -762,10 +779,6 @@ public class MilitaryChess extends JComponent {
 			}
 		}
 		if (isCamp(selection) || isCamp(index)) {
-			// 如果目标行营里有棋子，则不可达
-			if (isCamp(index) && chess[index] != ChessUtil.EMPTY) {
-				return false;
-			}
 			// 既然有一个是行营，那么一定不再涉及铁路线，不可达
 			return xOffsetAbs == 1 && yOffsetAbs == 1;
 		}
