@@ -211,14 +211,19 @@ public class MilitaryChess extends JComponent {
 			int[] xy = BoardUtil.index2xy(index);
 			int left = (int) ((gridWidth * xy[0] + gridWidth / 2) - stationWidth / 2);
 			int top = (int) ((gridHeight * xy[1] + gridHeight / 2) - stationHeight / 2);
-			if (piece == ChessUtil.ENEMY) {
+			g2d.setFont(new Font(Font.DIALOG, Font.BOLD, 24));
+			if (piece == ChessUtil.ENEMY || piece == -1) {
 				g2d.setColor(Color.red);
 				g2d.fillRect(left, top, (int) stationWidth, (int) stationHeight);
+				if (piece == -1) {
+					g2d.setColor(Color.white);
+					String chessName = "军旗";
+					g2d.drawString(chessName, left + 5, top + stationHeight * 3 / 4);
+				}
 			} else {
 				g2d.setColor(Color.blue);
 				g2d.fillRect(left, top, (int) stationWidth, (int) stationHeight);
 				g2d.setColor(Color.white);
-				g2d.setFont(new Font(Font.DIALOG, Font.BOLD, 24));
 				String chessName = ChessUtil.getChessName(piece);
 				g2d.drawString(chessName, left + 5, top + stationHeight * 3 / 4);
 			}
@@ -940,6 +945,10 @@ public class MilitaryChess extends JComponent {
 
 	public void endGame() {
 		state = State.END;
+	}
+
+	public void setEnemyFlag(int pos) {
+		chess[pos] = -1;
 	}
 
 	private enum State {

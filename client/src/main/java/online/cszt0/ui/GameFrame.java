@@ -111,6 +111,9 @@ public class GameFrame {
 				militaryChess.changeGameTurn();
 				break;
 			case 3:
+				militaryChess.setEnemyFlag(bytes[1]);
+				break;
+			case 4:
 				militaryChess.endGame();
 				int index = (bytes[1] == id ? 0 : 1) << 1 | bytes[2];
 				String[] text = {"对手军旗被拔，全军覆没！", "对手无棋可走，全军覆没！", "我方军旗被拔，全军覆没！", "我方无棋可走，全军覆没！"};
