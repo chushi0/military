@@ -77,7 +77,7 @@ public class ChessUtil {
 		chess[offset] = 13;
 		// 洗牌
 		for (int i = 24; i > 0; i--) {
-			int swap = (int) (Math.random() * i);
+			int swap = (int) (Math.random() * (i + 1));
 			byte tmp = chess[i];
 			chess[i] = chess[swap];
 			chess[swap] = tmp;

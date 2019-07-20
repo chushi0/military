@@ -1,6 +1,8 @@
 package online.cszt0.component;
 
+import online.cszt0.util.BoardUtil;
 import online.cszt0.util.ChessUtil;
+import online.cszt0.util.GraphUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,6 +15,8 @@ import java.awt.event.MouseEvent;
  * @date 2019/7/20 3:44
  */
 public class MilitaryChess extends JComponent {
+
+	private MoveChessListener moveChessListener;
 
 	private int[] boardPoints;
 	private byte[] chess;
@@ -36,6 +40,10 @@ public class MilitaryChess extends JComponent {
 		ChessUtil.reset(chess);
 		enableEvents(AWTEvent.MOUSE_EVENT_MASK);
 		selection = -1;
+	}
+
+	public void setMoveChessListener(MoveChessListener moveChessListener) {
+		this.moveChessListener = moveChessListener;
 	}
 
 	@Override
@@ -76,6 +84,37 @@ public class MilitaryChess extends JComponent {
 
 	public void oppositeReady() {
 		isOppositeReady = true;
+		repaint();
+	}
+
+	public boolean isAllReady() {
+		return isMeReady && isOppositeReady;
+	}
+
+	/**
+	 * 开始游戏
+	 *
+	 * @param nowMyTurn
+	 * 		我方是否为先手
+	 */
+	public void startGame(boolean nowMyTurn) {
+		assert isMeReady && isOppositeReady;
+		assert state == State.READY;
+		// 清除准备标记
+		isMeReady = false;
+		isOppositeReady = false;
+		// 处理对手棋子
+		for (int i = 30; i < 60; i++) {
+			chess[i] = ChessUtil.ENEMY;
+		}
+		chess[41] = ChessUtil.EMPTY;
+		chess[43] = ChessUtil.EMPTY;
+		chess[47] = ChessUtil.EMPTY;
+		chess[51] = ChessUtil.EMPTY;
+		chess[53] = ChessUtil.EMPTY;
+		// 转换状态
+		state = nowMyTurn ? State.GAMING : State.WAITING;
+		repaint();
 	}
 
 	private void drawFrame(Graphics2D g2d, float width, float height) {
@@ -92,7 +131,7 @@ public class MilitaryChess extends JComponent {
 		} else {
 			selection -= 30;
 		}
-		int[] xy = index2xy(selection);
+		int[] xy = BoardUtil.index2xy(selection);
 		int left = (int) ((gridWidth * xy[0] + gridWidth / 2) - stationWidth / 2);
 		int top = (int) ((gridHeight * xy[1] + gridHeight / 2) - stationHeight / 2);
 		g2d.setColor(Color.green);
@@ -120,7 +159,7 @@ public class MilitaryChess extends JComponent {
 			} else {
 				index -= 30;
 			}
-			int[] xy = index2xy(index);
+			int[] xy = BoardUtil.index2xy(index);
 			int left = (int) ((gridWidth * xy[0] + gridWidth / 2) - stationWidth / 2);
 			int top = (int) ((gridHeight * xy[1] + gridHeight / 2) - stationHeight / 2);
 			if (piece == ChessUtil.ENEMY) {
@@ -197,7 +236,7 @@ public class MilitaryChess extends JComponent {
 				// y==2/4/8/10时，x==1/3是行营
 				if (y == 2 || y == 4 || y == 8 || y == 10) {
 					if (x == 1 || x == 3) {
-						drawCamp(g2d, x, y, gridWidth, gridHeight, stationWidth, stationHeight, points);
+						drawCamp(g2d, x, y, gridWidth, gridHeight, points);
 					} else {
 						drawStation(g2d, x, y, gridWidth, gridHeight, stationWidth, stationHeight, points);
 					}
@@ -205,7 +244,7 @@ public class MilitaryChess extends JComponent {
 				}
 				// y==3或y==9时，x==2是行营
 				if ((y == 3 || y == 9) && x == 2) {
-					drawCamp(g2d, x, y, gridWidth, gridHeight, stationWidth, stationHeight, points);
+					drawCamp(g2d, x, y, gridWidth, gridHeight, points);
 					continue;
 				}
 				// 除此以外，均为兵站
@@ -221,36 +260,36 @@ public class MilitaryChess extends JComponent {
 		// 横向
 		for (int y : new int[]{1, 5, 7, 11}) {
 			for (int x = 1; x < 5; x++) {
-				int startX = points[(xy2index(x - 1, y) * 8 + 1) * 2];
-				int startY = points[(xy2index(x - 1, y) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8 + 3) * 2];
-				int endY = points[(xy2index(x, y) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x - 1, y) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x - 1, y) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 		}
 		// 纵向
 		for (int x : new int[]{0, 4}) {
 			for (int y = 2; y < 6; y++) {
-				int startX = points[(xy2index(x, y - 1) * 8 + 2) * 2];
-				int startY = points[(xy2index(x, y - 1) * 8 + 2) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8) * 2];
-				int endY = points[(xy2index(x, y) * 8) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, y - 1) * 8 + 2) * 2];
+				int startY = points[(BoardUtil.xy2index(x, y - 1) * 8 + 2) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			for (int y = 8; y < 12; y++) {
-				int startX = points[(xy2index(x, y - 1) * 8 + 2) * 2];
-				int startY = points[(xy2index(x, y - 1) * 8 + 2) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8) * 2];
-				int endY = points[(xy2index(x, y) * 8) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, y - 1) * 8 + 2) * 2];
+				int startY = points[(BoardUtil.xy2index(x, y - 1) * 8 + 2) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 		}
 		// 跨过前线的三条线
 		for (int x : new int[]{0, 2, 4}) {
-			int startX = points[(xy2index(x, 5) * 8 + 2) * 2];
-			int startY = points[(xy2index(x, 5) * 8 + 2) * 2 + 1];
-			int endX = points[(xy2index(x, 7) * 8) * 2];
-			int endY = points[(xy2index(x, 7) * 8) * 2 + 1];
+			int startX = points[(BoardUtil.xy2index(x, 5) * 8 + 2) * 2];
+			int startY = points[(BoardUtil.xy2index(x, 5) * 8 + 2) * 2 + 1];
+			int endX = points[(BoardUtil.xy2index(x, 7) * 8) * 2];
+			int endY = points[(BoardUtil.xy2index(x, 7) * 8) * 2 + 1];
 			g2d.drawLine(startX, startY, endX, endY);
 		}
 		g2d.setStroke(defaultStroke);
@@ -260,66 +299,66 @@ public class MilitaryChess extends JComponent {
 			int y = xy[1];
 			{
 				// 向上连接
-				int startX = points[(xy2index(x, y - 1) * 8 + 2) * 2];
-				int startY = points[(xy2index(x, y - 1) * 8 + 2) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8) * 2];
-				int endY = points[(xy2index(x, y) * 8) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, y - 1) * 8 + 2) * 2];
+				int startY = points[(BoardUtil.xy2index(x, y - 1) * 8 + 2) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向下连接
-				int startX = points[(xy2index(x, y) * 8 + 2) * 2];
-				int startY = points[(xy2index(x, y) * 8 + 2) * 2 + 1];
-				int endX = points[(xy2index(x, y + 1) * 8) * 2];
-				int endY = points[(xy2index(x, y + 1) * 8) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, y) * 8 + 2) * 2];
+				int startY = points[(BoardUtil.xy2index(x, y) * 8 + 2) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y + 1) * 8) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y + 1) * 8) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向左连接
-				int startX = points[(xy2index(x - 1, y) * 8 + 1) * 2];
-				int startY = points[(xy2index(x - 1, y) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8 + 3) * 2];
-				int endY = points[(xy2index(x, y) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x - 1, y) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x - 1, y) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向右连接
-				int startX = points[(xy2index(x, y) * 8 + 1) * 2];
-				int startY = points[(xy2index(x, y) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x + 1, y) * 8 + 3) * 2];
-				int endY = points[(xy2index(x + 1, y) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, y) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x, y) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x + 1, y) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x + 1, y) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向左上连接
-				int startX = points[(xy2index(x - 1, y - 1) * 8 + 6) * 2];
-				int startY = points[(xy2index(x - 1, y - 1) * 8 + 6) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8 + 4) * 2];
-				int endY = points[(xy2index(x, y) * 8 + 4) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x - 1, y - 1) * 8 + 6) * 2];
+				int startY = points[(BoardUtil.xy2index(x - 1, y - 1) * 8 + 6) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8 + 4) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8 + 4) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向右上连接
-				int startX = points[(xy2index(x + 1, y - 1) * 8 + 7) * 2];
-				int startY = points[(xy2index(x + 1, y - 1) * 8 + 7) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8 + 5) * 2];
-				int endY = points[(xy2index(x, y) * 8 + 5) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x + 1, y - 1) * 8 + 7) * 2];
+				int startY = points[(BoardUtil.xy2index(x + 1, y - 1) * 8 + 7) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8 + 5) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8 + 5) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向左下连接
-				int startX = points[(xy2index(x - 1, y + 1) * 8 + 5) * 2];
-				int startY = points[(xy2index(x - 1, y + 1) * 8 + 5) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8 + 7) * 2];
-				int endY = points[(xy2index(x, y) * 8 + 7) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x - 1, y + 1) * 8 + 5) * 2];
+				int startY = points[(BoardUtil.xy2index(x - 1, y + 1) * 8 + 5) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8 + 7) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8 + 7) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			{
 				// 向右下连接
-				int startX = points[(xy2index(x + 1, y + 1) * 8 + 4) * 2];
-				int startY = points[(xy2index(x + 1, y + 1) * 8 + 4) * 2 + 1];
-				int endX = points[(xy2index(x, y) * 8 + 6) * 2];
-				int endY = points[(xy2index(x, y) * 8 + 6) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x + 1, y + 1) * 8 + 4) * 2];
+				int startY = points[(BoardUtil.xy2index(x + 1, y + 1) * 8 + 4) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, y) * 8 + 6) * 2];
+				int endY = points[(BoardUtil.xy2index(x, y) * 8 + 6) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 		}
@@ -328,78 +367,77 @@ public class MilitaryChess extends JComponent {
 		for (int x = 0; x < 5; x++) {
 			// 向左连线
 			if (x != 0) {
-				int startX = points[(xy2index(x - 1, 0) * 8 + 1) * 2];
-				int startY = points[(xy2index(x - 1, 0) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x, 0) * 8 + 3) * 2];
-				int endY = points[(xy2index(x, 0) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x - 1, 0) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x - 1, 0) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, 0) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x, 0) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			// 向右连线
 			if (x != 4) {
-				int startX = points[(xy2index(x, 0) * 8 + 1) * 2];
-				int startY = points[(xy2index(x, 0) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x + 1, 0) * 8 + 3) * 2];
-				int endY = points[(xy2index(x + 1, 0) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, 0) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x, 0) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x + 1, 0) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x + 1, 0) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			// 向下连线
-			int startX = points[(xy2index(x, 0) * 8 + 2) * 2];
-			int startY = points[(xy2index(x, 0) * 8 + 2) * 2 + 1];
-			int endX = points[(xy2index(x, 1) * 8) * 2];
-			int endY = points[(xy2index(x, 1) * 8) * 2 + 1];
+			int startX = points[(BoardUtil.xy2index(x, 0) * 8 + 2) * 2];
+			int startY = points[(BoardUtil.xy2index(x, 0) * 8 + 2) * 2 + 1];
+			int endX = points[(BoardUtil.xy2index(x, 1) * 8) * 2];
+			int endY = points[(BoardUtil.xy2index(x, 1) * 8) * 2 + 1];
 			g2d.drawLine(startX, startY, endX, endY);
 		}
 		// 我方
 		for (int x = 0; x < 5; x++) {
 			// 向左连线
 			if (x != 0) {
-				int startX = points[(xy2index(x - 1, 12) * 8 + 1) * 2];
-				int startY = points[(xy2index(x - 1, 12) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x, 12) * 8 + 3) * 2];
-				int endY = points[(xy2index(x, 12) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x - 1, 12) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x - 1, 12) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x, 12) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x, 12) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			// 向右连线
 			if (x != 4) {
-				int startX = points[(xy2index(x, 12) * 8 + 1) * 2];
-				int startY = points[(xy2index(x, 12) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x + 1, 12) * 8 + 3) * 2];
-				int endY = points[(xy2index(x + 1, 12) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, 12) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x, 12) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x + 1, 12) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x + 1, 12) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 			// 向上连线
-			int startX = points[(xy2index(x, 11) * 8 + 2) * 2];
-			int startY = points[(xy2index(x, 11) * 8 + 2) * 2 + 1];
-			int endX = points[(xy2index(x, 12) * 8) * 2];
-			int endY = points[(xy2index(x, 12) * 8) * 2 + 1];
+			int startX = points[(BoardUtil.xy2index(x, 11) * 8 + 2) * 2];
+			int startY = points[(BoardUtil.xy2index(x, 11) * 8 + 2) * 2 + 1];
+			int endX = points[(BoardUtil.xy2index(x, 12) * 8) * 2];
+			int endY = points[(BoardUtil.xy2index(x, 12) * 8) * 2 + 1];
 			g2d.drawLine(startX, startY, endX, endY);
 		}
 		// 4.剩下的线
 		// 上下连
 		for (int y : new int[]{1, 4, 7, 10}) {
-			int startX = points[(xy2index(2, y) * 8 + 2) * 2];
-			int startY = points[(xy2index(2, y) * 8 + 2) * 2 + 1];
-			int endX = points[(xy2index(2, y + 1) * 8) * 2];
-			int endY = points[(xy2index(2, y + 1) * 8) * 2 + 1];
+			int startX = points[(BoardUtil.xy2index(2, y) * 8 + 2) * 2];
+			int startY = points[(BoardUtil.xy2index(2, y) * 8 + 2) * 2 + 1];
+			int endX = points[(BoardUtil.xy2index(2, y + 1) * 8) * 2];
+			int endY = points[(BoardUtil.xy2index(2, y + 1) * 8) * 2 + 1];
 			g2d.drawLine(startX, startY, endX, endY);
 		}
 		// 左右连
 		for (int x : new int[]{0, 3}) {
 			for (int y : new int[]{3, 9}) {
-				int startX = points[(xy2index(x, y) * 8 + 1) * 2];
-				int startY = points[(xy2index(x, y) * 8 + 1) * 2 + 1];
-				int endX = points[(xy2index(x + 1, y) * 8 + 3) * 2];
-				int endY = points[(xy2index(x + 1, y) * 8 + 3) * 2 + 1];
+				int startX = points[(BoardUtil.xy2index(x, y) * 8 + 1) * 2];
+				int startY = points[(BoardUtil.xy2index(x, y) * 8 + 1) * 2 + 1];
+				int endX = points[(BoardUtil.xy2index(x + 1, y) * 8 + 3) * 2];
+				int endY = points[(BoardUtil.xy2index(x + 1, y) * 8 + 3) * 2 + 1];
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 		}
 		boardPoints = points;
 	}
 
-	private void drawCamp(Graphics2D g2d, int x, int y, float gridWidth, float gridHeight, float stationWidth,
-	                      float stationHeight, int[] points) {
-		stationWidth = gridWidth * 4 / 5;
-		stationHeight = gridHeight * 4 / 5;
+	private void drawCamp(Graphics2D g2d, int x, int y, float gridWidth, float gridHeight, int[] points) {
+		float stationWidth = gridWidth * 4 / 5;
+		float stationHeight = gridHeight * 4 / 5;
 		int centerX = (int) (gridWidth * x + gridWidth / 2);
 		int centerY = (int) (gridHeight * y + gridHeight / 2);
 		int left = (int) (centerX - stationWidth / 2);
@@ -412,7 +450,7 @@ public class MilitaryChess extends JComponent {
 		float b = stationHeight / 2;
 		// p 为椭圆与直线y=x的交点坐标
 		float p = (float) (a * b / Math.sqrt(a * a + b * b));
-		int offset = xy2index(x, y) * 8 * 2;
+		int offset = BoardUtil.xy2index(x, y) * 8 * 2;
 		// 上
 		points[offset++] = centerX;
 		points[offset++] = top;
@@ -457,7 +495,7 @@ public class MilitaryChess extends JComponent {
 		float b = stationHeight / 2;
 		// p 为椭圆与直线y=x的交点坐标
 		float p = (float) (a * b / Math.sqrt(a * a + b * b));
-		int offset = xy2index(x, y) * 8 * 2;
+		int offset = BoardUtil.xy2index(x, y) * 8 * 2;
 		// 上
 		points[offset++] = centerX;
 		points[offset++] = top;
@@ -493,7 +531,7 @@ public class MilitaryChess extends JComponent {
 		int top = (int) (centerY - stationHeight / 2);
 		int bottom = (int) (centerY + stationHeight / 2);
 		g2d.drawRect(left, top, (int) stationWidth, (int) stationHeight);
-		int offset = xy2index(x, y) * 8 * 2;
+		int offset = BoardUtil.xy2index(x, y) * 8 * 2;
 		// 上
 		points[offset++] = centerX;
 		points[offset++] = top;
@@ -523,7 +561,7 @@ public class MilitaryChess extends JComponent {
 	@Override
 	protected void processMouseEvent(MouseEvent e) {
 		super.processMouseEvent(e);
-		if (e.getID() == MouseEvent.MOUSE_CLICKED) {
+		if (e.getID() == MouseEvent.MOUSE_PRESSED) {
 			int button = e.getButton();
 			if (button == MouseEvent.BUTTON1) {
 				// 准备阶段且已准备完成，忽略事件
@@ -572,7 +610,7 @@ public class MilitaryChess extends JComponent {
 		} else {
 			y += 6;
 		}
-		int index = xy2index(x, y);
+		int index = BoardUtil.xy2index(x, y);
 		if (index < 0 || index >= 60) {
 			return;
 		}
@@ -594,6 +632,172 @@ public class MilitaryChess extends JComponent {
 	}
 
 	private void clickOnGaming(int index) {
+		// 两次点击位置相同，认为取消选中
+		if (selection == index) {
+			selection = -1;
+			return;
+		}
+		byte currentChess = chess[selection];
+		// 检查当前棋子是否可以移动
+		// 军棋一定在大本营，因此无需特殊判断
+		if (currentChess == 12) {
+			Toolkit.getDefaultToolkit().beep();
+			JOptionPane.showMessageDialog(this, "地雷不能移动", "指挥错误", JOptionPane.ERROR_MESSAGE);
+			selection = -1;
+			return;
+		}
+		if (selection == 26 || selection == 28 || selection == 31 || selection == 33) {
+			Toolkit.getDefaultToolkit().beep();
+			JOptionPane.showMessageDialog(this, "大本营中的棋子不能移动", "指挥错误", JOptionPane.ERROR_MESSAGE);
+			selection = -1;
+			return;
+		}
+		if (chess[index] > 1) {
+			Toolkit.getDefaultToolkit().beep();
+			JOptionPane.showMessageDialog(this, "指定位置已有我方棋子", "指挥错误", JOptionPane.ERROR_MESSAGE);
+			selection = -1;
+			return;
+		}
+		// 检查是否可以移动到指定位置
+		boolean accessible = movable(index);
+		if (!accessible) {
+			Toolkit.getDefaultToolkit().beep();
+			JOptionPane.showMessageDialog(this, "无法移动到指定位置", "指挥错误", JOptionPane.ERROR_MESSAGE);
+			selection = -1;
+			return;
+		}
+		// 请求移动
+		moveChessListener.onMoveChess(selection, index);
+		selection = -1;
+	}
+
+	public void moveChess(int from, int to, MoveType moveType) {
+		// TODO: 记得做动画
+		switch (moveType) {
+			case KEEP:
+				break;
+			case REPLACE:
+				chess[to] = chess[from];
+				break;
+			case CLEAR:
+				chess[to] = ChessUtil.EMPTY;
+				break;
+		}
+		chess[from] = ChessUtil.EMPTY;
+	}
+
+	private boolean movable(int index) {
+		// 转化坐标
+		int[] from, to;
+		if (selection < 30) {
+			from = BoardUtil.index2xy(selection + 30);
+		} else {
+			from = BoardUtil.index2xy(selection - 30);
+		}
+		if (index < 30) {
+			to = BoardUtil.index2xy(index + 30);
+		} else {
+			to = BoardUtil.index2xy(index - 30);
+		}
+		int xOffset = to[0] - from[0];
+		int yOffset = to[1] - from[1];
+		int xOffsetAbs = xOffset > 0 ? xOffset : -xOffset;
+		int yOffsetAbs = yOffset > 0 ? yOffset : -yOffset;
+		// 不考虑铁路线的判断
+		// 上下左右允许走一格，涉及行营允许斜着走
+		if (xOffsetAbs == 1 && yOffsetAbs == 0 || xOffsetAbs == 0 && yOffsetAbs == 1) {
+			// 考虑山界问题
+			if (!((from[0] == 1 || from[0] == 3) && (from[1] == 5 && to[1] == 6 || from[1] == 6 && to[1] == 5))) {
+				return true;
+			}
+		}
+		if (isCamp(selection) || isCamp(index)) {
+			// 如果目标行营里有棋子，则不可达
+			if (isCamp(index) && chess[index] != ChessUtil.EMPTY) {
+				return false;
+			}
+			// 既然有一个是行营，那么一定不再涉及铁路线，不可达
+			return xOffsetAbs == 1 && yOffsetAbs == 1;
+		}
+		// 如果某一个不涉及铁路线，则不可达
+		// 尤其注意 y==0或y==11不是铁路线
+		if (from[0] != 0 && from[0] != 4 && from[1] != 1 && from[1] != 5 && from[1] != 6 && from[1] != 10) {
+			return false;
+		}
+		if (to[0] != 0 && to[0] != 4 && to[1] != 1 && to[1] != 5 && to[1] != 6 && to[1] != 10) {
+			return false;
+		}
+		if (from[1] == 0 || from[1] == 11 || to[1] == 0 || to[1] == 11) {
+			return false;
+		}
+		int xOffsetStep = xOffset == 0 ? 0 : xOffset / xOffsetAbs;
+		int yOffsetStep = yOffset == 0 ? 0 : yOffset / yOffsetAbs;
+		// 不考虑工兵的情况
+		boolean isEngineer = chess[selection] == 2;
+		// 直线且中间无阻隔
+		if (xOffset == 0) {
+			// 上下走，只能是 x==0或4
+			if (from[0] == 0 || from[0] == 4) {
+				boolean accessible = true;
+				// 中间是否无阻隔
+				for (int i = from[1] + yOffsetStep; i != to[1]; i += yOffsetStep) {
+					int xy2index = BoardUtil.xy2index(from[0], i);
+					if (xy2index < 30) {
+						xy2index += 30;
+					} else {
+						xy2index -= 30;
+					}
+					if (chess[xy2index] != ChessUtil.EMPTY) {
+						accessible = false;
+						break;
+					}
+				}
+				if (accessible) {
+					return true;
+				}
+			}
+		}
+		if (yOffset == 0) {
+			// 左右走，只能是 y==1/5/6/10
+			if (from[1] == 1 || from[1] == 5 || from[1] == 6 || from[1] == 10) {
+				boolean accessible = true;
+				// 中间是否无阻隔
+				for (int i = from[0] + xOffsetStep; i != to[0]; i += xOffsetStep) {
+					int xy2index = BoardUtil.xy2index(i, from[1]);
+					if (xy2index < 30) {
+						xy2index += 30;
+					} else {
+						xy2index -= 30;
+					}
+					if (chess[xy2index] != ChessUtil.EMPTY) {
+						accessible = false;
+						break;
+					}
+				}
+				if (accessible) {
+					return true;
+				}
+			}
+		}
+		// 除工兵外，均无法通行
+		if (!isEngineer) {
+			return false;
+		}
+		// 工兵的情况
+		GraphUtil graphUtil = new GraphUtil();
+		graphUtil.setStartPoint(selection);
+		graphUtil.setEndPoint(index);
+		graphUtil.cutByBoard(chess);
+		return graphUtil.accessible();
+	}
+
+	private boolean isCamp(int index) {
+		for (int camp : new int[]{6, 8, 12, 16, 18, 41, 43, 47, 51, 53}) {
+			if (index == camp) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void clickOnReady(int index) {
@@ -658,17 +862,6 @@ public class MilitaryChess extends JComponent {
 		selection = -1;
 	}
 
-	private int xy2index(int x, int y) {
-		return y * 5 + x;
-	}
-
-	private int[] index2xy(int index) {
-		return new int[]{
-				index % 5,
-				index / 5
-		};
-	}
-
 	private enum State {
 		/**
 		 * 准备阶段，玩家摆设阵型
@@ -686,5 +879,24 @@ public class MilitaryChess extends JComponent {
 		 * 结束阶段，游戏已经结束
 		 */
 		END
+	}
+
+	public enum MoveType {
+		/**
+		 * 移动并替换指定位置的棋子
+		 */
+		REPLACE,
+		/**
+		 * 移动并保留指定位置的棋子（清除自己）
+		 */
+		KEEP,
+		/**
+		 * 移动并清除自己和指定位置的棋子
+		 */
+		CLEAR;
+	}
+
+	public interface MoveChessListener {
+		void onMoveChess(int from, int to);
 	}
 }
