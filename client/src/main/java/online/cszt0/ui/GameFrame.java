@@ -32,7 +32,7 @@ public class GameFrame {
 
 	GameFrame(Socket socket) {
 		this.socket = socket;
-		frame = new JFrame();
+		frame = new JFrame("陆战棋");
 		ui = new GameFrameUI();
 		militaryChess = new MilitaryChess();
 		ui.chestPanel.add(militaryChess, BorderLayout.CENTER);
