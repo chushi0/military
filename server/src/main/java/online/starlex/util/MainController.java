@@ -147,11 +147,11 @@ public class MainController {
                     deleteByPosition(position2);
                     message[1] = 3;
                     extraMessage[0] = 3;
-                    if (team == 2) {
-                        extraMessage[1] = (byte) (59 - nameToPosition(200));
+                    if (team == 1) {
+                        extraMessage[1] = (byte) (59 - nameToPosition(100));
                         send(socketHelper.socketPool.get("Player2"), extraMessage);
-                    } else if (team == 1) {
-                        extraMessage[1] = nameToPosition(100);
+                    } else if (team == 2) {
+                        extraMessage[1] = nameToPosition(200);
                         send(socketHelper.socketPool.get("Player1"), extraMessage);
                     }
                     isGameEnd();
