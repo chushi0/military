@@ -949,6 +949,7 @@ public class MilitaryChess extends JComponent {
 
 	public void setEnemyFlag(int pos) {
 		chess[pos] = -1;
+		repaint();
 	}
 
 	private enum State {
