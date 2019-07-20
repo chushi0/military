@@ -18,7 +18,6 @@ public class MilitaryChess extends JComponent {
 
 	private MoveChessListener moveChessListener;
 
-	private int[] boardPoints;
 	private byte[] chess;
 
 	/**
@@ -31,6 +30,9 @@ public class MilitaryChess extends JComponent {
 	private boolean isOppositeReady;
 
 	private int selection;
+
+	private int start;
+	private int end;
 
 	private State state;
 
@@ -69,10 +71,55 @@ public class MilitaryChess extends JComponent {
 			case END:
 				// 绘制棋子
 				drawPiece(g2d, width, height);
+				// 绘制棋子移动位置
+				drawPieceMove(g2d, width, height);
 		}
 		// 绘制选择框
 		if (selection != -1) {
 			drawFrame(g2d, width, height);
+		}
+	}
+
+	private void drawPieceMove(Graphics2D g2d, float width, float height) {
+		// 为每个棋子留下的空间
+		float gridWidth = width / 5;
+		float gridHeight = height / 13;
+		// 棋子占用空间
+		float stationWidth = gridWidth * 3 / 5;
+		float stationHeight = gridHeight * 3 / 5;
+		// 起始位置
+		if (start != -1) {
+			int selection = this.start;
+			if (selection < 30) {
+				selection += 35;
+			} else {
+				selection -= 30;
+			}
+			int[] xy = BoardUtil.index2xy(selection);
+			int left = (int) ((gridWidth * xy[0] + gridWidth / 2) - stationWidth / 2);
+			int top = (int) ((gridHeight * xy[1] + gridHeight / 2) - stationHeight / 2);
+			g2d.setColor(Color.pink);
+			Stroke defaultStroke = g2d.getStroke();
+			g2d.setStroke(new BasicStroke(5));
+			g2d.drawRect(left, top, (int) stationWidth, (int) stationHeight);
+			g2d.setStroke(defaultStroke);
+		}
+		// 终止位置
+		if (start != -1) {
+			int selection = this.end;
+			if (selection < 30) {
+				selection += 35;
+			} else {
+				selection -= 30;
+			}
+			int[] xy = BoardUtil.index2xy(selection);
+			int left = (int) ((gridWidth * xy[0] + gridWidth / 2) - stationWidth / 2);
+			int top = (int) ((gridHeight * xy[1] + gridHeight / 2) - stationHeight / 2);
+			g2d.setColor(Color.orange);
+			Stroke defaultStroke = g2d.getStroke();
+			g2d.setStroke(new BasicStroke(5));
+			g2d.drawRect(left, top, (int) stationWidth, (int) stationHeight);
+			g2d.setStroke(defaultStroke);
 		}
 	}
 
@@ -103,6 +150,8 @@ public class MilitaryChess extends JComponent {
 		// 清除准备标记
 		isMeReady = false;
 		isOppositeReady = false;
+		start = -1;
+		end = -1;
 		// 处理对手棋子
 		for (int i = 30; i < 60; i++) {
 			chess[i] = ChessUtil.ENEMY;
@@ -432,7 +481,6 @@ public class MilitaryChess extends JComponent {
 				g2d.drawLine(startX, startY, endX, endY);
 			}
 		}
-		boardPoints = points;
 	}
 
 	private void drawCamp(Graphics2D g2d, int x, int y, float gridWidth, float gridHeight, int[] points) {
@@ -672,7 +720,8 @@ public class MilitaryChess extends JComponent {
 	}
 
 	public void moveChess(int from, int to, MoveType moveType) {
-		// TODO: 记得做动画
+		start = from;
+		end = to;
 		switch (moveType) {
 			case KEEP:
 				break;
@@ -684,6 +733,7 @@ public class MilitaryChess extends JComponent {
 				break;
 		}
 		chess[from] = ChessUtil.EMPTY;
+		repaint();
 	}
 
 	private boolean movable(int index) {
@@ -862,6 +912,23 @@ public class MilitaryChess extends JComponent {
 		selection = -1;
 	}
 
+	public byte[] getChessData() {
+		return chess.clone();
+	}
+
+	public void changeGameTurn() {
+		if (state == State.GAMING) {
+			state = State.WAITING;
+		} else if (state == State.WAITING) {
+			state = State.GAMING;
+		}
+		repaint();
+	}
+
+	public void endGame() {
+		state = State.END;
+	}
+
 	private enum State {
 		/**
 		 * 准备阶段，玩家摆设阵型
@@ -893,7 +960,7 @@ public class MilitaryChess extends JComponent {
 		/**
 		 * 移动并清除自己和指定位置的棋子
 		 */
-		CLEAR;
+		CLEAR
 	}
 
 	public interface MoveChessListener {

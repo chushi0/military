@@ -77,8 +77,8 @@ public class GraphUtil {
 				cutLine(point);
 			}
 		}
-		for(int x:new int[] {0,4}) {
-			for(int y=1;y<11;y++) {
+		for (int x : new int[]{0, 4}) {
+			for (int y = 1; y < 11; y++) {
 				int point = BoardUtil.xy2index(x, y);
 				int p;
 				if (point < 30) {
@@ -261,6 +261,10 @@ public class GraphUtil {
 				}
 				return p[1] >= point1[1] && p[1] <= point2[1];
 			}
+		}
+
+		int getLength() {
+			return isHorizontal ? point2[0] - point1[0] : point2[1] - point1[1];
 		}
 	}
 }

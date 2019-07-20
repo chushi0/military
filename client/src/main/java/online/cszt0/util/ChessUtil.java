@@ -22,11 +22,11 @@ public class ChessUtil {
 			10,// 司令
 			11,// 炸弹
 			12,// 地雷
-			13// 军棋
+			13// 军旗
 	};
 
 	private static final String[] NAMES = {
-			"工兵", "排长", "连长", "营长", "团长", "旅长", "师长", "军长", "司令", "炸弹", "地雷", "军棋"
+			"工兵", "排长", "连长", "营长", "团长", "旅长", "师长", "军长", "司令", "炸弹", "地雷", "军旗"
 	};
 
 	public static String getChessName(int piece) {
@@ -73,7 +73,7 @@ public class ChessUtil {
 		chess[offset++] = 12;
 		chess[offset++] = 12;
 		chess[offset++] = 12;
-		// 军棋
+		// 军旗
 		chess[offset] = 13;
 		// 洗牌
 		for (int i = 24; i > 0; i--) {
@@ -93,7 +93,7 @@ public class ChessUtil {
 		chess[12] = EMPTY;
 		chess[16] = EMPTY;
 		chess[18] = EMPTY;
-		// 保证军棋在大本营
+		// 保证军旗在大本营
 		for (int i = 0; i < 30; i++) {
 			if (chess[i] == 13) {
 				if (i != 26 && i != 28) {
