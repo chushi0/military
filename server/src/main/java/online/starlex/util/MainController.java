@@ -326,9 +326,9 @@ public class MainController {
         Piece piece1 = findByPosition(position1);
         Piece piece2 = findByPosition(position2);
         if (piece2 != null) {
-            return piece2.getName() / 100 != piece1.getName() / 100;
+            return piece2.getName() / 100 == piece1.getName() / 100;
         }
-        return true;
+        return false;
     }
 
     public class ThreadReceiver implements Runnable {
