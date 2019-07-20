@@ -114,13 +114,25 @@ public class MainController {
                 extraMessage[0] = 3;
                 if (name1 == 11) {
                     //棋子1是司令，棋子2是炸弹
-                    extraMessage[1] = nameToPosition(100);
-                    send(socketHelper.socketPool.get("Player2"), extraMessage);
+                    if(team == 1){
+                        extraMessage[1] = (byte) (59 - nameToPosition(100));
+                        send(socketHelper.socketPool.get("Player2"), extraMessage);
+                    }
+                    if(team == 2){
+                        extraMessage[1] = nameToPosition(200);
+                        send(socketHelper.socketPool.get("Player1"), extraMessage);
+                    }
                     isGameEnd();
                 } else if (name2 == 11) {
                     //棋子1是炸弹，棋子2是司令
-                    extraMessage[1] = nameToPosition(200);
-                    send(socketHelper.socketPool.get("Player1"), extraMessage);
+                    if(team == 2){
+                        extraMessage[1] = (byte) (59 - nameToPosition(100));
+                        send(socketHelper.socketPool.get("Player2"), extraMessage);
+                    }
+                    if(team == 1){
+                        extraMessage[1] = nameToPosition(200);
+                        send(socketHelper.socketPool.get("Player1"), extraMessage);
+                    }
                     isGameEnd();
                 }
             } else if (name2 == 1) {
@@ -135,8 +147,13 @@ public class MainController {
                     deleteByPosition(position2);
                     message[1] = 3;
                     extraMessage[0] = 3;
-                    extraMessage[1] = nameToPosition(100);
-                    send(socketHelper.socketPool.get("Player2"), extraMessage);
+                    if (team == 2) {
+                        extraMessage[1] = (byte) (59 - nameToPosition(100));
+                        send(socketHelper.socketPool.get("Player2"), extraMessage);
+                    } else if (team == 1) {
+                        extraMessage[1] = nameToPosition(100);
+                        send(socketHelper.socketPool.get("Player1"), extraMessage);
+                    }
                     isGameEnd();
                 } else {
                     deleteByPosition(position1);
@@ -149,7 +166,7 @@ public class MainController {
                 deleteByPosition(position2);
                 move(position1, position2);
                 gameMessage[0] = 4;
-                gameMessage[1] = 1;
+                gameMessage[1] = (byte) team;
                 gameMessage[2] = 0;
                 send(socketHelper.socketPool.get("Player1"), gameMessage);
                 send(socketHelper.socketPool.get("Player2"), gameMessage);
@@ -159,7 +176,7 @@ public class MainController {
                 deleteByPosition(position2);
                 message[1] = 3;
                 extraMessage[0] = 3;
-                extraMessage[1] = nameToPosition(100);
+                extraMessage[1] = (byte) (59 - nameToPosition(100));
                 send(socketHelper.socketPool.get("Player2"), extraMessage);
                 extraMessage[0] = 3;
                 extraMessage[1] = nameToPosition(200);
@@ -167,8 +184,8 @@ public class MainController {
                 isGameEnd();
             } else {
                 if (name1 > name2) {
-                    move(position1, position2);
                     deleteByPosition(position2);
+                    move(position1, position2);
                     message[1] = 1;
                     isGameEnd();
                 } else if (name1 < name2) {
@@ -176,7 +193,6 @@ public class MainController {
                     message[1] = 2;
                     isGameEnd();
                 } else {
-                    assert name1 == name2;
                     deleteByPosition(position1);
                     deleteByPosition(position2);
                     message[1] = 3;
